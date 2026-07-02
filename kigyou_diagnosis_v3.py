@@ -3,6 +3,75 @@ import plotly.graph_objects as go
 
 # --- ページ設定 ---
 st.set_page_config(page_title="起業タイプ診断", layout="centered")
+
+# ================================
+# CSS：ビジネス・知的トーン（深藍×グレー）
+# ================================
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
+
+html, body, div, p, span, label, textarea, button {
+    font-family: 'Noto Sans JP', sans-serif !important;
+}
+
+.stApp {
+    background: linear-gradient(180deg, #f5f6f8 0%, #e9ecf1 100%);
+}
+
+.block-container {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+}
+
+h1 {
+    color: #1c2b4a !important;
+    font-weight: 900 !important;
+}
+
+h3 {
+    color: #2b3a5a !important;
+    font-weight: 700 !important;
+    border-bottom: 2px solid #c7cedb;
+    padding-bottom: 6px;
+}
+
+div.stButton > button {
+    width: 100% !important;
+    padding: 12px 18px !important;
+    border-radius: 8px !important;
+    font-size: 17px !important;
+    font-weight: 700 !important;
+    background-color: #1c2b4a !important;
+    color: #ffffff !important;
+    border: none !important;
+    box-shadow: 0 3px 8px rgba(28, 43, 74, 0.25) !important;
+}
+
+div.stButton > button:hover {
+    background-color: #33456e !important;
+}
+
+div[data-testid="stProgress"] div div {
+    background-color: #1c2b4a !important;
+}
+
+div[role="radiogroup"] label p {
+    font-size: 28px !important;
+}
+
+.result-card {
+    padding: 20px !important;
+    border-radius: 10px !important;
+    background-color: #ffffff;
+    border: 1px solid #c7cedb;
+    border-left: 6px solid #1c2b4a;
+    margin-top: 12px;
+    margin-bottom: 20px;
+}
+</style>
+""", unsafe_allow_html=True)
+
 st.title("起業タイプ診断")
 st.write("以下の質問に、顔のアイコンであなたの気持ちの度合いを選んでください（左＝まったく当てはまらない　右＝とてもそう思う）。")
 
@@ -71,6 +140,8 @@ question_set = {
         "自分の意見よりも、周りの意見に合わせてしまうことがある",
     ],
 }
+
+EMOJIS = ["😫", "😐", "🙂", "😊", "🤩"]
 
 TYPE_AXES = ["性格傾向", "価値観", "仕事スタイル"]
 
@@ -166,7 +237,15 @@ if step < total_steps:
     for i, question in enumerate(questions):
         q_num = start_idx + i
         st.write(f"No.{q_num} {question}")
-        value = st.feedback("faces", key=f"Q{q_num}")
+        value = st.radio(
+            label=f"Q{q_num}",
+            options=[0, 1, 2, 3, 4],
+            format_func=lambda i: EMOJIS[i],
+            index=None,
+            horizontal=True,
+            key=f"Q{q_num}",
+            label_visibility="collapsed",
+        )
         # 未回答（None）は中間の「3」として扱う
         current_responses[q_num] = (value if value is not None else 2) + 1
 
@@ -198,7 +277,14 @@ if step >= total_steps:
 
     st.markdown("---")
     st.subheader(f"あなたのタイプは「{diagnosed_type['name']}」")
-    st.write(diagnosed_type["text"])
+    st.markdown(
+        f"""
+        <div class="result-card">
+        {diagnosed_type["text"].replace(chr(10), "<br>")}
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     # --- レーダーチャート（タイプ判定に使う3軸のみ） ---
     cats = TYPE_AXES.copy()
